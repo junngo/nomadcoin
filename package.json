@@ -1,0 +1,13 @@
+{
+  "name": "nomadcoin",
+  "version": "1.0.0",
+  "description": "Nomadcoin, the awesome coin made in Node.js",
+  "main": "src/server.js",
+  "repository": "https://github.com/junngo/nomadcoin.git",
+  "author": "Myeongjun Go <myeongjun.ko@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "crypto-js": "^3.1.9-1"
+  }
+}
