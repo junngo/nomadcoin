@@ -108,7 +108,7 @@ const isChainValid = (candidateChain) => {
 };
 
 const replaceChain = candiateBlock => {
-  if(isChainValid(candiateBlock) && newChain.length > getBlockChain().length) {
+  if(isChainValid(candiateBlock) && candiateBlock.length > getBlockChain().length) {
     blockchain = candiateBlock;
     return true;
   } else {

@@ -10,14 +10,17 @@ yarn init
 yarn add crypto-js
 ```
 
-'''
-yarn add express morgan body-parser
-'''
-
+#### install package
 ```
+yarn add express morgan body-parser
 yarn global add nodemon
 ```
-
+#### start server
 ```
 yarn dev
+```
+
+#### install websocket
+```
+yarn add ws
 ```
