@@ -5,8 +5,8 @@ const express = require("express"),
   P2P = require("./p2p");
 
 
-const { getBlockChain, createNewBlock} = Blockchain;
-const { startP2PServer } = P2P;
+const { getBlockChain, createNewBlock } = Blockchain;
+const { startP2PServer, connectToPeers } = P2P;
 
 // export HTTP_PORT=4000
 const PORT = process.env.HTTP_PORT || 3000;
@@ -20,10 +20,17 @@ app.get("/blocks", (req, res) => {
 });
 
 app.post("/blocks", (req, res) => {
-  const { body: { data }} = req;
+  const { body: { data } } = req;
   //const { headers: { data }} = req;
   const newBlock = createNewBlock(data);
   res.send(newBlock);
+});
+
+app.post("/peers", (req, res) => {
+  //const { headers: { peer } } = req;
+  const { body : { peer }} = req;
+  connectToPeers(peer);
+  res.send();
 });
 
 const server = app.listen(PORT, () =>
