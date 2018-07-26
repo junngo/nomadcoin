@@ -21,13 +21,11 @@ app.get("/blocks", (req, res) => {
 
 app.post("/blocks", (req, res) => {
   const { body: { data } } = req;
-  //const { headers: { data }} = req;
   const newBlock = createNewBlock(data);
   res.send(newBlock);
 });
 
 app.post("/peers", (req, res) => {
-  //const { headers: { peer } } = req;
   const { body : { peer }} = req;
   connectToPeers(peer);
   res.send();

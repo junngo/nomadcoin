@@ -7,14 +7,14 @@ const getSockets = () => sockets;
 const startP2PServer = server => {
   const wsServer = new WebSockets.Server({ server });
   wsServer.on("connection", ws => {
-    console.log(`Hello ${ws}`)
     initSocketConnection(ws);
   });
-  console.log('Nomadcoin P2P Server Running!')
+  console.log('Nomadcoin P2P Server Running!');
 };
 
 const initSocketConnection = socket => {
   sockets.push(socket);
+  handleSocketError(socket);
   socket.on("message", data => {
     console.log(data);
   });
@@ -22,6 +22,15 @@ const initSocketConnection = socket => {
   setTimeout(() => {
     socket.send("welcome");
   }, 5000);
+};
+
+const handleSocketError = ws => {
+  const closeSocketConnection = ws => {
+    ws.close();
+    sockets.splice(sockets.indexOf(ws), 1);
+  };
+  ws.on("close", () => closeSocketConnection(ws));
+  ws.on("error", () => closeSocketConnection(ws));
 };
 
 const connectToPeers = newPeer => {
