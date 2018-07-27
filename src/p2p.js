@@ -1,7 +1,13 @@
 const WebSockets = require("ws"),
   Blockchain = require("./blockchain");
 
-const { getNewestBlock, isBlockStructureValid, addBlockToChain, replaceChain } = Blockchain;
+const { getNewestBlock, 
+        isBlockStructureValid, 
+        addBlockToChain, 
+        replaceChain, 
+        getBlockChain
+      } = Blockchain;
+
 const sockets = [];
 
 // Messages Types
@@ -71,6 +77,10 @@ const handleSocketMessages = ws => {
         sendMessage(ws, responseLatest());
         break;
 
+      case GET_ALL:
+        sendMessage(ws, responseAll());
+        break;
+
       case BLOCKCHAIN_RESPONSE:
         const receivedBlocks = message.data;
         if(receivedBlocks === null){
@@ -98,7 +108,7 @@ const handleBlockchainResponse = receivedBlocks => {
     if(newestBlock.hash === latestBlockReceived.previousHash){
       addBlockToChain(latestBlockReceived);
     }else if(receivedBlocks.length === 1){
-      // to do, get all the blocks, we are way behind
+      sendMessageToAll(getAll());
     } else {
       replaceChain(receivedBlocks);
     }
@@ -108,8 +118,15 @@ const handleBlockchainResponse = receivedBlocks => {
 const sendMessage = (ws, message) => 
     ws.send(JSON.stringify(message));
 
+const sendMessageToAll = message =>
+    sockets.forEach(ws => sendMessage(ws, message));
+
 const responseLatest = () => 
-    blockchainResponse([getLastBlock()]);
+    blockchainResponse([getNewestBlock()]);
+
+const responseAll = () => 
+    blockchainResponse(getBlockChain())
+
 
 const handleSocketError = ws => {
   const closeSocketConnection = ws => {
