@@ -50,6 +50,7 @@ const createNewBlock = data => {
   );
 
   addBlockToChain(newBlock);
+  require("./p2p").broadcastNewBlock();
   return newBlock;
 };
 
@@ -118,7 +119,7 @@ const replaceChain = candiateBlock => {
 
 const addBlockToChain = candiateBlock => {
   if (isBlockValid(candiateBlock, getNewestBlock())) {
-    getBlockChain().push(candiateBlock);
+    blockchain.push(candiateBlock);
     return true;
   } else {
     return false;
