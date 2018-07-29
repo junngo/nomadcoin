@@ -1,6 +1,9 @@
 const CryptoJS = require("crypto-js"),
   hexToBinary = require("hex-to-binary");
 
+const BLOCK_GENERATION_INTERVAL = 10;
+const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;  
+
 class Block {
   constructor(index, hash, previousHash, timestamp, data, difficulty, nonce){
     this.index = index;
@@ -40,12 +43,13 @@ const createNewBlock = data => {
   const previousBlock = getNewestBlock();
   const newBlockIndex = previousBlock.index + 1;
   const newTimeStamp = getTimestamp();
+  const difficulty = findDifficulty();
   const newBlock = findBlock(
     newBlockIndex,
     previousBlock.hash,
     newTimeStamp,
     data,
-    15
+    difficulty
   );
 
   addBlockToChain(newBlock);
@@ -53,9 +57,33 @@ const createNewBlock = data => {
   return newBlock;
 };
 
+const findDifficulty = () => {
+  const newestBlock = getNewestBlock();
+  if (newestBlock.index % DIFFICULTY_ADJUSTMENT_INTERVAL === 0 &&
+      newestBlock.index !== 0) {
+    return calculateNewDifficulty(newestBlock, getBlockChain());
+  } else {
+    return newestBlock.difficulty;
+  }
+};
+
+const calculateNewDifficulty = (newestBlock, blockchain) => {
+  const lastCalculateBlock =
+    blockchain[blockchain.length - DIFFICULTY_ADJUSTMENT_INTERVAL];
+  const timeExpected =
+    BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL;
+  const timeTaken = newestBlock.timestamp - lastCalculateBlock.timestamp;
+  if (timeTaken < timeExpected / 2){
+    return lastCalculateBlock.difficulty + 1;
+  } else if (timeTaken > timeExpected * 2){
+    return lastCalculateBlock.difficulty - 1;
+  } else {
+    return lastCalculateBlock.difficulty;
+  }
+};
+
 const findBlock = (index, previousHash, timestamp, data, difficulty) => {
   let nonce = 0;
-  console.log("Current nonce", nonce);
   while(true) {
     const hash = createHash(
       index,
@@ -89,7 +117,15 @@ const hashMatchesDifficulty = (hash, difficulty) => {
   return hashInBinary.startsWith(requiredZeros);
 }
 
-const getBlockHash = (block) => createHash(block.index, block.previousHash, block.timestamp, block.data);
+const getBlockHash = (block) => 
+  createHash(
+    block.index, 
+    block.previousHash, 
+    block.timestamp, 
+    block.data,
+    block.difficulty,
+    block.nonce
+  );
 
 const isBlockValid = (candiateBlock, latestBlock) => {
   if (!isBlockStructureValid(candiateBlock)) {
