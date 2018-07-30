@@ -20,7 +20,7 @@ const genesisBlock = new Block(
   0,
   "FC093ABF7C2E0AFFC1FE3B0E8AB7C7D3849E37B0D2BD868BE4DF93C34158C897",
   null,
-  1520519860205,
+  1532944450,
   "This is the genesis!!",
   0,
   0
@@ -30,7 +30,7 @@ let blockchain = [genesisBlock];
 
 const getNewestBlock = () => blockchain[blockchain.length -1];
 
-const getTimestamp = () => new Date().getTime() / 1000;
+const getTimestamp = () => Math.round(new Date().getTime() / 1000);
 
 const getBlockChain = () => blockchain;
 
@@ -127,6 +127,13 @@ const getBlockHash = (block) =>
     block.nonce
   );
 
+const isTimeStampValid = (newBlock, oldBlock) => {
+  return (
+    oldBlock.timestamp - 60 < newBlock.timestamp &&
+    newBlock.timestamp - 60 < getTimestamp()
+    );
+};
+
 const isBlockValid = (candiateBlock, latestBlock) => {
   if (!isBlockStructureValid(candiateBlock)) {
     console.log("The canditate block structure is not valid");
@@ -141,6 +148,9 @@ const isBlockValid = (candiateBlock, latestBlock) => {
     return false;
   } else if (getBlockHash(candiateBlock) !== candiateBlock.hash) {
     console.log("The hash of this block is invalid");
+    return false;
+  } else if(!isTimeStampValid(candiateBlock, latestBlock)) {
+    console.log("The timespamp of this block is dodgy");
     return false;
   }
   return true;
@@ -179,8 +189,17 @@ const isChainValid = (candidateChain) => {
   return true;
 };
 
+const sumDifficulty = anyBlockchain =>
+  anyBlockchain
+    .map(block => block.difficulty)
+    .map(difficulty => Math.pow(2, difficulty))
+    .reduce((a, b) => a+b);
+
 const replaceChain = candiateBlock => {
-  if(isChainValid(candiateBlock) && candiateBlock.length > getBlockChain().length) {
+  if(isChainValid(candiateBlock) &&
+     sumDifficulty(candiateBlock) > sumDifficulty(getBlockChain())
+     ) 
+  {
     blockchain = candiateBlock;
     return true;
   } else {
