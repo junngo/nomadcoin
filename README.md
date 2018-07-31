@@ -30,3 +30,8 @@ yarn add ws
 ```
 yarn add hex-to-binary
 ```
+
+#### add elliptic
+```
+yarn add elliptic
+```
