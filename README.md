@@ -26,7 +26,7 @@ yarn add ws
 ```
 
 
-#### add hext to binary for hash matches
+#### add hex to binary for hash matches
 ```
 yarn add hex-to-binary
 ```

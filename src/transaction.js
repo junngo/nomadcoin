@@ -65,3 +65,22 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     return Signature;
 
 };
+
+const updateUTxOuts = (newTxs, uTxOutList) => {
+    const newUTxOuts = newTxs
+        .map(tx => {
+            tx.txOuts.map((txOut, index) => {
+                new uTxOut(tx.id, index, txOut.address, txOut.amount);
+            });
+        })
+        .reduce((a, b) => a.contact(b), []);
+    
+    const spentTxOuts = newTxs
+        .map(tx => tx.txIns)
+        .reduce((a, b) => a.contact(b), [])
+        .map(txIn => new uTxOut(txIn.txOutId, txIn.txOutIndex, "", 0));
+
+    const resultingUTxOuts = uTxOutList
+        .filter(uTxO => !findUTxOut(uTxO.txOutContent, uTxO.txOutIndex, spentTxOuts))
+        .concat(newUTxOuts);
+};
