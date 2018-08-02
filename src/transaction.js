@@ -73,14 +73,80 @@ const updateUTxOuts = (newTxs, uTxOutList) => {
                 new uTxOut(tx.id, index, txOut.address, txOut.amount);
             });
         })
-        .reduce((a, b) => a.contact(b), []);
+        .reduce((a, b) => a.concat(b), []);
     
     const spentTxOuts = newTxs
         .map(tx => tx.txIns)
-        .reduce((a, b) => a.contact(b), [])
+        .reduce((a, b) => a.concat(b), [])
         .map(txIn => new uTxOut(txIn.txOutId, txIn.txOutIndex, "", 0));
 
     const resultingUTxOuts = uTxOutList
         .filter(uTxO => !findUTxOut(uTxO.txOutContent, uTxO.txOutIndex, spentTxOuts))
         .concat(newUTxOuts);
+};
+
+const isTxInStructureValid = (txIn) => {
+    if(txIn === null){
+        return false;
+    } else if(typeof txIn.signature !== "string"){
+        return false;
+    } else if(typeof txIn.txOutId !== "string"){
+        return false;
+    } else if(typeof txIn.txOutIndex !== "number"){
+        return false;
+    } else {
+        return true;
+    }
+}
+
+const isAddressValid = (address) => {
+    if(address.length !== 300){
+        return false;
+    } else if(address.match("^[a-fA-F0-9]+$") === null){
+        return false;
+    } else if(!address.startsWith("04")){
+        return false;
+    } else {
+        return true;
+    }
+}
+
+const isTxOutStructureValid = (txOut) => {
+    if(txOut === null){
+        return false;
+    } else if(typeof txOut.address !== "string"){
+        return false;
+    } else if(!isAddressValid(txOut.address)){
+        return false;
+    } else if(typeof txOut.amount !== "number"){
+        return false;
+    } else {
+        return true;
+    }
+    
+}
+
+const isTxStructureValid = tx => {
+    if (typeof tx.id !== "string"){
+        console.log("Tx ID is not valid");
+        return false;
+    } else if(!(tx.txIns instanceof Array)){
+        console.log("The txIns are not an array");
+        return false;
+    } else if( 
+        !tx.txIns.map(isTxInStructureValid).reduce((a, b) => a && b, true)
+    ){
+        console.log("The structure of one of the txIn is not valid");
+        return false;
+    } else if(!(tx.txOuts instanceof Array)){
+        console.log("The txOuts are not an array");
+        return false;
+    } else if(
+        !tx.txOut.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
+    ){
+        console.log("The structure of one of the txOut is not valid");
+        return false;
+    } else {
+        return true;
+    }
 };
