@@ -35,3 +35,8 @@ yarn add hex-to-binary
 ```
 yarn add elliptic
 ```
+
+#### add lodash
+```
+yarn add lodash
+```

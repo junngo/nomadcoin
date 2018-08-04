@@ -49,7 +49,8 @@ const getTxId = tx => {
 };
 
 const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
-    return uTxOutList.find(uTxOut => uTxOut.txOutId === txOutId && uTxOut.txOutIndex === txOutIndex);
+    return uTxOutList
+        .find(uTxOut => uTxOut.txOutId === txOutId && uTxOut.txOutIndex === txOutIndex);
 };
 
 const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
@@ -57,16 +58,27 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     const dataToSign = tx.id;
     const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOuts);
 
-    if (referencedUTxOut === null){
+    if(referencedUTxOut === null){
         console.log("Couldn't find the referenced uTxOut, not signing");
         return;
     }
 
+    const referencedAddress = referencedUTxOut.address;
+    if(getPublicKey(privateKey) !== referencedAddress){
+        return false;
+    }
+
     const key = ec.keyFromPrivate(privateKey, "hex");
-    const Signature = utils.toHexString(key.sign(dataToSign).toDER());
+    const signature = utils.toHexString(key.sign(dataToSign).toDER());
 
-    return Signature;
+    return signature;
+};
 
+const getPublicKey = () => {
+    return ec
+        .keyFromPrivate(privateKey, "hex")
+        .getPublic()
+        .encode("hex");
 };
 
 const updateUTxOuts = (newTxs, uTxOutList) => {
@@ -121,7 +133,7 @@ const isAddressValid = (address) => {
     } else {
         return true;
     }
-}
+};
 
 const isTxOutStructureValid = (txOut) => {
     if(txOut === null){
