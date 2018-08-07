@@ -34,7 +34,6 @@ class uTxOut{
     }
 }
 
-const uTxOuts = [];
 
 const getTxId = tx => {
     const txInContent = tx.txIns
@@ -74,7 +73,7 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     return signature;
 };
 
-const getPublicKey = () => {
+const getPublicKey = privateKey => {
     return ec
         .keyFromPrivate(privateKey, "hex")
         .getPublic()
@@ -188,8 +187,7 @@ const validateTxIn = (txIn, tx, uTxOutList) => {
     }
 };
 
-const getAmountInTxIn = (txIn, uTxOutList) 
-    => findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList).amount();
+const getAmountInTxIn = (txIn, uTxOutList) => findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList).amount();
 
 const validateTx = (tx, uTxOutList) => {
 
