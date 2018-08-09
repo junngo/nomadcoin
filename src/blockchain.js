@@ -4,7 +4,7 @@ const CryptoJS = require("crypto-js"),
   hexToBinary = require("hex-to-binary");
 
 const { getBalance, getPublicFromWallet } = Wallet;
-const { createCoinbaseTx } = Transaction;
+const { createCoinbaseTx, processTxs } = Transaction;
 
 const BLOCK_GENERATION_INTERVAL = 10;
 const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;  
@@ -226,8 +226,22 @@ const replaceChain = candiateBlock => {
 
 const addBlockToChain = candiateBlock => {
   if (isBlockValid(candiateBlock, getNewestBlock())) {
-    blockchain.push(candiateBlock);
-    return true;
+    
+    const processedTxs = processTxs(
+      candiateBlock.data,
+      uTxOuts,
+      candiateBlock.index
+    );
+
+    if(processedTxs === null){
+      console.log("Couldn't process txs");
+      return false;
+    } else {
+      blockchain.push(candiateBlock);
+      uTxOuts = processedTxs;
+      return true;
+    }
+
   } else {
     return false;
   }

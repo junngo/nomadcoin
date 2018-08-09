@@ -1,5 +1,6 @@
 const CryptoJS = require("crypto-js"),
     elliptic = require("elliptic"),
+    _ = require("lodash"),
     utils = require("./utils");
 
 const ec = new elliptic.ec("secp256k1");
@@ -44,7 +45,7 @@ const getTxId = tx => {
         .map(txOut => txOut.address + txOut.amount)
         .reduce((a, b) => a + b, "");
     
-    return CryptoJS.SHA256(txInContent + txOutContent).toString();
+    return CryptoJS.SHA256(txInContent + txOutContent + tx.timestamp).toString();
 };
 
 const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
@@ -83,10 +84,11 @@ const getPublicKey = privateKey => {
 const updateUTxOuts = (newTxs, uTxOutList) => {
     const newUTxOuts = newTxs
         .map(tx => {
-            tx.txOuts.map((txOut, index) => {
-                new uTxOut(tx.id, index, txOut.address, txOut.amount);
-            });
-        })
+            return tx.txOuts.map((txOut, index) => 
+                new uTxOut(tx.id, index, txOut.address, txOut.amount)
+            );
+                    }
+            )
         .reduce((a, b) => a.concat(b), []);
     
     const spentTxOuts = newTxs
@@ -95,7 +97,7 @@ const updateUTxOuts = (newTxs, uTxOutList) => {
         .map(txIn => new uTxOut(txIn.txOutId, txIn.txOutIndex, "", 0));
 
     const resultingUTxOuts = uTxOutList
-        .filter(uTxO => !findUTxOut(uTxO.txOutContent, uTxO.txOutIndex, spentTxOuts))
+        .filter(uTxO => !findUTxOut(uTxO.txOutId, uTxO.txOutIndex, spentTxOuts))
         .concat(newUTxOuts);
     
     return resultingUTxOuts;
@@ -249,11 +251,58 @@ const createCoinbaseTx = (address, blockIndex) => {
     const tx = new Transaction();
     const txIn = new TxIn();
     txIn.signature = "";
-    txIn.txOutId = blockIndex;
-    tx.txIns =[txIn];
+    txIn.txOutId = "";
+    txIn.txOutIndex = blockIndex;
+    tx.txIns = [txIn];
     tx.txOuts = [new TxOut(address, COINBASE_AMOUNT)];
     tx.id = getTxId(tx);
     return tx;
+};
+
+//prevent double spending
+const hasDuplicates = (txIns) => {
+    const groups = _.countBy(txIns, txIn => txIn.txOutId + txIn.txOutIndex);
+
+    return _(groups).map(value => {
+        if(value > 1){
+            console.log("Found a duplicated txIn");
+            return true;
+        } else {
+            return false;
+        }
+    }).includes(true);
+};
+
+const validateBlockTxs = (txs, utxOutList, blockIndex) => {
+    const coinbaseTx = txs[0];
+    
+    if(!validateCoinbaseTx(coinbaseTx, blockIndex)) {
+        console.log("Coinbase Tx is invalid");
+    }
+
+    const txIns = _(txs)
+        .map(tx => tx.txIns)
+        .flatten()
+        .value();
+    
+    if(hasDuplicates(txIns)){
+        console.log("Found duplicated txIns");
+        return false;
+    }
+
+    const nonCoinbaseTxs = txs.slice(1);
+
+    return nonCoinbaseTxs
+        .map(tx => validateTx(tx, uTxOutList))
+        .reduce((a, b) => a + b, true);
+};
+
+const processTxs = (txs, uTxOutList, blockIndex) => {
+    if(!validateBlockTxs(txs, uTxOutList, blockIndex)) {
+        return null;
+    }
+    
+    return updateUTxOuts(txs,uTxOutList);
 };
 
 module.exports = {
@@ -263,5 +312,6 @@ module.exports = {
     TxIn,
     Transaction,
     TxOut,
-    createCoinbaseTx
+    createCoinbaseTx,
+    processTxs
 };
