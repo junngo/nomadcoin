@@ -27,9 +27,9 @@ class Transaction{
 }
 
 class uTxOut{
-    constructor(uTxOutId, uTxOutIndex, address, amount){
-        this.uTxOutId = uTxOutId;
-        this.uTxOutIndex = uTxOutIndex;
+    constructor(txOutId, txOutIndex, address, amount){
+        this.txOutId = txOutId;
+        this.txOutIndex = txOutIndex;
         this.address = address;
         this.amount = amount;
     }
@@ -87,8 +87,7 @@ const updateUTxOuts = (newTxs, uTxOutList) => {
             return tx.txOuts.map((txOut, index) => 
                 new uTxOut(tx.id, index, txOut.address, txOut.amount)
             );
-                    }
-            )
+        })
         .reduce((a, b) => a.concat(b), []);
     
     const spentTxOuts = newTxs
