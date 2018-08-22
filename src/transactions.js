@@ -58,7 +58,7 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     const dataToSign = tx.id;
     const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOutList);
 
-    if(referencedUTxOut === null){
+    if(referencedUTxOut === null || referencedUTxOut === undefined){
         console.log("Couldn't find the referenced uTxOut, not signing");
         return;
     }
