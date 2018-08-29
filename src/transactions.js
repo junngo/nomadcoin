@@ -38,7 +38,7 @@ class uTxOut{
 
 const getTxId = tx => {
     const txInContent = tx.txIns
-        .map(txIn => txIn.uTxOutId + txIn.uTxOutIndex)
+        .map(txIn => txIn.txOutId + txIn.txOutIndex)
         .reduce((a, b) => a + b, "");
 
     const txOutContent = tx.txOuts
@@ -50,13 +50,13 @@ const getTxId = tx => {
 
 const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
     return uTxOutList
-        .find(uTxOut => uTxOut.txOutId === txOutId && uTxOut.txOutIndex === txOutIndex);
+        .find(uTxO => uTxO.txOutId === txOutId && uTxO.txOutIndex === txOutIndex);
 };
 
 const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     const txIn = tx.txIns[txInIndex];
     const dataToSign = tx.id;
-    const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOutList);
+    const referencedUTxOut = findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList);
 
     if(referencedUTxOut === null || referencedUTxOut === undefined){
         console.log("Couldn't find the referenced uTxOut, not signing");
@@ -83,11 +83,11 @@ const getPublicKey = privateKey => {
 
 const updateUTxOuts = (newTxs, uTxOutList) => {
     const newUTxOuts = newTxs
-        .map(tx => {
-            return tx.txOuts.map((txOut, index) => 
-                new uTxOut(tx.id, index, txOut.address, txOut.amount)
-            );
-        })
+        .map(tx =>
+                tx.txOuts.map(
+                    (txOut, index) => new uTxOut(tx.id, index, txOut.address, txOut.amount)
+                )
+            )
         .reduce((a, b) => a.concat(b), []);
     
     const spentTxOuts = newTxs
@@ -121,7 +121,7 @@ const isTxInStructureValid = (txIn) => {
 };
 
 const isAddressValid = (address) => {
-    if(address.length !== 300){
+    if(address.length !== 130){
         console.log("The address length is not the expected one");
         return false;
     } else if(address.match("^[a-fA-F0-9]+$") === null){
@@ -168,7 +168,7 @@ const isTxStructureValid = tx => {
         console.log("The txOuts are not an array");
         return false;
     } else if(
-        !tx.txOut.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
+        !tx.txOuts.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
     ){
         console.log("The structure of one of the txOut is not valid");
         return false;
@@ -178,7 +178,7 @@ const isTxStructureValid = tx => {
 };
 
 const validateTxIn = (txIn, tx, uTxOutList) => {
-    const wantedTxOut = uTxOutList.find(uTxO => utxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex);
+    const wantedTxOut = uTxOutList.find(uTxO => uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex);
     if(wantedTxOut === null){
         return false;
     } else {
@@ -188,29 +188,34 @@ const validateTxIn = (txIn, tx, uTxOutList) => {
     }
 };
 
-const getAmountInTxIn = (txIn, uTxOutList) => findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList).amount();
+const getAmountInTxIn = (txIn, uTxOutList) => findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList).amount;
 
 const validateTx = (tx, uTxOutList) => {
 
     if(!isTxStructureValid(tx)){
+        console.log("Tx structure is invalid");
         return false;
     }
 
     if (getTxId(tx) !== tx.id){
+        console.log("Tx ID is not valid");
         return false;
     }
 
-    const hasValidTxIns = tx.txIns.map(txIn => validateTxIn(txIn, tx, uTxOuts));
+    const hasValidTxIns = tx.txIns.map(txIn => validateTxIn(txIn, tx, uTxOutList));
 
     if (!hasValidTxIns) {
+        console.log(`The tx: ${tx} doesn't have valid txIns`);
         return false;
     }
 
-    const amountIntxIns =tx.txIns
+    const amountIntxIns = tx.txIns
         .map(txIn => getAmountInTxIn(txIn, uTxOutList))
         .reduce((a, b) => a + b, 0);
 
-    const amountInTxOuts = tx.txOuts.map(txOut => txOut.amount).reduce((a, b) => a + b, 0);
+    const amountInTxOuts = tx.txOuts
+        .map(txOut => txOut.amount)
+        .reduce((a, b) => a + b, 0);
 
     if(amountIntxIns !== amountInTxOuts){
         return false;
@@ -272,7 +277,7 @@ const hasDuplicates = (txIns) => {
     }).includes(true);
 };
 
-const validateBlockTxs = (txs, utxOutList, blockIndex) => {
+const validateBlockTxs = (txs, uTxOutList, blockIndex) => {
     const coinbaseTx = txs[0];
     
     if(!validateCoinbaseTx(coinbaseTx, blockIndex)) {

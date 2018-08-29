@@ -7,7 +7,7 @@ const CryptoJS = require("crypto-js"),
 
 const { getBalance, getPublicFromWallet, createTx, getPrivateFromWallet } = Wallet;
 const { createCoinbaseTx, processTxs } = Transaction;
-const { addToMempool } = Mempool;
+const { addToMempool, getMempool } = Mempool;
 
 const BLOCK_GENERATION_INTERVAL = 10;
 const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;  
@@ -55,7 +55,7 @@ const createNewBlock = () => {
     getNewestBlock().index + 1
   );
 
-  const blockData = [coinbaseTx];
+  const blockData = [coinbaseTx].concat(getMempool());
   return createNewRawBlock(blockData);
 };
 
@@ -137,7 +137,7 @@ const hashMatchesDifficulty = (hash, difficulty) => {
   return hashInBinary.startsWith(requiredZeros);
 }
 
-const getBlockHash = (block) => 
+const getBlockHash = block => 
   createHash(
     block.index, 
     block.previousHash, 
@@ -176,7 +176,7 @@ const isBlockValid = (candiateBlock, latestBlock) => {
   return true;
 };
 
-const isBlockStructureValid = (block) => {
+const isBlockStructureValid = block => {
   return (
     typeof block.index === "number" &&
     typeof block.hash === "string" &&
@@ -186,7 +186,7 @@ const isBlockStructureValid = (block) => {
   );
 };
 
-const isChainValid = (candidateChain) => {
+const isChainValid = candidateChain => {
 
   const isGenesisValid = block => {
     return JSON.stringify(block) === JSON.stringify(genesisBlock);
@@ -215,12 +215,12 @@ const sumDifficulty = anyBlockchain =>
     .map(difficulty => Math.pow(2, difficulty))
     .reduce((a, b) => a+b);
 
-const replaceChain = candiateBlock => {
-  if(isChainValid(candiateBlock) &&
-     sumDifficulty(candiateBlock) > sumDifficulty(getBlockChain())
+const replaceChain = candidateChain => {
+  if(isChainValid(candidateChain) &&
+     sumDifficulty(candidateChain) > sumDifficulty(getBlockChain())
      ) 
   {
-    blockchain = candiateBlock;
+    blockchain = candidateChain;
     return true;
   } else {
     return false;
@@ -244,7 +244,7 @@ const addBlockToChain = candiateBlock => {
       uTxOuts = processedTxs;
       return true;
     }
-
+    return true;
   } else {
     return false;
   }
@@ -258,6 +258,8 @@ const getAccountBalance = () =>
 const sendTx = (address, amount) => {
   const tx = createTx(address, amount, getPrivateFromWallet(), getUTxOutList());
   addToMempool(tx, getUTxOutList());
+
+  return tx;
 };
 
 module.exports = {

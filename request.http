@@ -28,6 +28,6 @@ POST http://localhost:3000/transactions/
 content-type: application/json
 
 {
-  "address":"046fc466fbae488d9aa13c56cbfcd97505f4db555ebf011987447e861cfb29a853112aeeca50228439a4536aae0145f12c088db66b65ad3b1744291ad78e5193a7",
-  "amount" : 40
+  "address":"04aa8ac72f11754a173db464723d0d06b0961bbba1e8410dd06335acd549dc11d13c4271bf86f92c53279967ef09d995cc3242db4a08b701a2b54e987240e5fd92",
+  "amount" : 30
 }

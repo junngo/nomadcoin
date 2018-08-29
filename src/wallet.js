@@ -57,27 +57,27 @@ const findAmountInUTxOuts = (amountNeeded, myUTxOuts) => {
 
     for(const myUTxOut of myUTxOuts) {
         includedUTxOuts.push(myUTxOut);
-        currentAmount = currentAmount + myUTxOut.amount;
+        currentAmount = currentAmount = myUTxOut.amount;
         if(currentAmount >= amountNeeded){
             const leftOverAmount = currentAmount - amountNeeded;
-            return { includedUTxOuts, leftOverAmount};
+            return { includedUTxOuts, leftOverAmount };
         }
     }
     throw Error("Not enough founds");
     return false;
 };
 
-const createTxOuts = (receiveraddress, myAddress, amount, leftOverAmount) => {
-    const receiverTxOut = new TxOut(receiveraddress, amount);
+const createTxOuts = (receiverAddress, myAddress, amount, leftOverAmount) => {
+    const receiverTxOut = new TxOut(receiverAddress, amount);
     if(leftOverAmount === 0){
         return [receiverTxOut]
     } else {
         const leftOverTxOut = new TxOut(myAddress, leftOverAmount);
-        return [receiverTxOut, leftOverTxOut];
+        return [receiverTxOut, leftOverTxOut];  
     }
 };
 
-const createTx = (receiveraddress, amount, privateKey, uTxOutList) => {
+const createTx = (receiverAddress, amount, privateKey, uTxOutList) => {
     const myAddress = getPublicKey(privateKey);
     const myUTxOuts = uTxOutList.filter(uTxO => uTxO.address === myAddress);
 
@@ -99,13 +99,13 @@ const createTx = (receiveraddress, amount, privateKey, uTxOutList) => {
     const tx = new Transaction();
 
     tx.txIns = unsignedTxIns;
-    tx.txOuts = createTxOuts(receiveraddress, myAddress, amount, leftOverAmount);
+    tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount);
 
     tx.id = getTxId(tx);
 
     tx.txIns = tx.txIns.map((txIn, index) => {
         txIn.signature = signTxIn(tx, index, privateKey, uTxOutList);
-        return txIn;
+        return txIn;    
     });
 
     return tx;

@@ -33,7 +33,7 @@ const getAll = () => {
 const blockchainResponse = data => {
   return {
     type: BLOCKCHAIN_RESPONSE,
-    data: data
+    data
   };
 };
 

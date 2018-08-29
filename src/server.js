@@ -21,11 +21,11 @@ app.use(morgan("combined"));
 app
   .route("/blocks")
   .get((req, res) => {
-  res.send(getBlockChain());
+    res.send(getBlockChain());
   })
   .post((req, res) => {
-  const newBlock = createNewBlock();
-  res.send(newBlock);
+    const newBlock = createNewBlock();
+    res.send(newBlock);
 });
 
 app.post("/peers", (req, res) => {

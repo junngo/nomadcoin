@@ -5,6 +5,8 @@ const { validateTx } = Transactions;
 
 let mempool = [];
 
+const getMempool = () => _.cloneDeep(mempool);
+
 const getTxInsInPool = mempool => {
     return _(mempool)
         .map(tx => tx.txIns)
@@ -37,11 +39,12 @@ const addToMempool = (tx, uTxOutList) => {
     if(!validateTx(tx, uTxOutList)){
         throw Error("This tx is invalid. Will not add it to pool");
     }else if(!isTxValidForPool(tx, mempool)){
-        throw Error("This tx is not valid fot the pool. Will not add it.");
+        throw Error("This tx is not valid for the pool. Will not add it.");
     }
     mempool.push(tx);
 };
 
 module.exports = {
-    addToMempool
+    addToMempool,
+    getMempool
 };
